@@ -9,14 +9,14 @@ __log_port             : 514
 __log_facility         : local2
 __log_file             : /var/log/haproxy.log
 __log_config_file      : /etc/rsyslog.conf
-__log_template_version : 1.0-2213.712
+__log_template_version : 1.0-2213.955
 
 
 __haproxy_maxconn          : 4096
 __haproxy_user             : haproxy
 __haproxy_group            : haproxy
 __haproxy_config_file      : /etc/haproxy/haproxy.cfg
-__haproxy_template_version : 1.0-2213.809
+__haproxy_template_version : 1.0-2213.955
 
 
 __haproxy_defaults:
