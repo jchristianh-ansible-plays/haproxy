@@ -1,0 +1,72 @@
+---
+- name: Deploy HAProxy
+  hosts: all
+  gather_facts: no
+  become: no
+
+  #-------------------------
+  # VARS
+  #-------------------------
+  vars_files:
+    - vars/defaults.yml
+
+
+  #-------------------------
+  # TASKS
+  #-------------------------
+  tasks:
+    - name: Install HAProxy
+      package :
+        name  : haproxy
+        state : present
+
+
+    - name: Update rsyslog.conf to support HAProxy logging
+      template :
+        src    : templates/rsyslog_conf.j2
+        dest   : "{{ __log_config_file }}"
+        owner  : root
+        group  : root
+        mode   : 0644
+      notify   : restart_rsyslog
+
+
+    # We need rsyslog listening on 514 prior
+    # to HAProxy starting:
+    - name: Recalibrating the discombobulator
+      meta: flush_handlers
+
+
+    - name: Deploy haproxy.cfg
+      template :
+        src    : templates/haproxy_cfg.j2
+        dest   : "{{ __haproxy_config_file }}"
+        owner  : root
+        group  : root
+        mode   : 644
+      notify   : restart_haproxy
+
+
+    - name: Enable HAProxy service on boot and start service
+      service   :
+        name    : haproxy
+        state   : started
+        enabled : yes
+
+
+  #-------------------------
+  # HANDLERS
+  #-------------------------
+  handlers:
+    - name: restart_rsyslog
+      service :
+        name  : rsyslog
+        state : restarted
+
+    - name: restart_haproxy
+      service :
+        name  : haproxy
+        state : restarted
+
+
+...

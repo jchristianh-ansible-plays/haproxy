@@ -1,0 +1,59 @@
+---
+__repo_author : Chris Hammer
+__repo_email  : chris.hammer@redhat.com
+
+
+__log_host             : 127.0.0.1
+__log_port             : 514
+__log_facility         : local2
+__log_file             : /var/log/haproxy.log
+__log_config_file      : /etc/rsyslog.conf
+__log_template_version : 1.0-2213.712
+
+
+__haproxy_maxconn          : 4096
+__haproxy_user             : haproxy
+__haproxy_group            : haproxy
+__haproxy_config_file      : /etc/haproxy/haproxy.cfg
+__haproxy_template_version : 1.0-2213.809
+
+
+__haproxy_defaults:
+  forwardfor: yes
+  timeout:
+    retries         : 3
+    http_request    : 10s
+    queue           : 1m
+    connect         : 10s
+    client          : 1m
+    server          : 1m
+    http_keep_alive : 10s
+    check           : 10s
+
+
+__frontends:
+  - name: ansible_automation_platform
+    mode: http
+    bind:
+      - 80
+      - 443
+    ssl_certificate : /etc/haproxy/ssl/haproxy.pem
+    backend         : aap_control_plane
+
+
+__backends:
+  - name   : aap_control_plane
+    check  : yes
+    ssl    : yes
+    verify : none
+    hosts:
+      - name: lab-tower-1
+        host: 10.10.10.65
+        port: 443
+
+      - name: lab-tower-3
+        host: 10.10.10.67
+        port: 443
+
+
+...

@@ -1,0 +1,88 @@
+##########################
+# The Zen Garden Network #
+##########################
+#
+# Configuration    : {{ __haproxy_config_file }}
+# Template Version : {{ __haproxy_template_version }}
+#
+# {{ __repo_author }} <{{ __repo_email }}>
+###############################################
+
+
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    log         {{ __log_host }}:{{ __log_port }}  {{ __log_facility }}
+
+    chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     {{ __haproxy_maxconn + __haproxy_maxconn }}
+    user        {{ __haproxy_user }}
+    group       {{ __haproxy_group }}
+    daemon
+
+    # turn on stats unix socket
+    stats socket /var/lib/haproxy/stats
+
+    # utilize system-wide crypto-policies
+    ssl-default-bind-ciphers PROFILE=SYSTEM
+    ssl-default-server-ciphers PROFILE=SYSTEM
+
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+{% if __haproxy_defaults.forwardfor %}
+    option forwardfor       except 127.0.0.0/8
+{% endif %}
+    option                  redispatch
+    retries                 {{ __haproxy_defaults.timeout.retries }}
+    timeout http-request    {{ __haproxy_defaults.timeout.http_request }}
+    timeout queue           {{ __haproxy_defaults.timeout.queue }}
+    timeout connect         {{ __haproxy_defaults.timeout.connect }}
+    timeout client          {{ __haproxy_defaults.timeout.client }}
+    timeout server          {{ __haproxy_defaults.timeout.server }}
+    timeout http-keep-alive {{ __haproxy_defaults.timeout.http_keep_alive }}
+    timeout check           {{ __haproxy_defaults.timeout.check }}
+    maxconn                 {{ __haproxy_maxconn }}
+
+
+
+#--------------------------------------------------
+# Begin Load Balanced Sites
+#--------------------------------------------------
+{% for fe in __frontends %}
+frontend {{ fe.name }}
+  mode {{ fe.mode }}
+
+{% for port in fe.bind %}
+{% if port == 443 %}
+  bind *:{{ port }}  ssl  crt  {{ fe.ssl_certificate }}
+{% else %}
+  bind *:{{ port }}
+{% endif %}
+{% endfor %}
+
+  http-request redirect scheme https code 301 unless { ssl_fc }
+  http-request set-header X-Forwarded-Proto https if { ssl_fc }
+  http-request set-header X-Forwarded-Proto http if !{ ssl_fc }
+
+  default_backend {{ fe.backend }}
+{% endfor %}
+
+
+{% for be in __backends %}
+backend {{ be.name }}
+{% for host in be.hosts %}
+  server {{ host.name }}  {{ host.host }}:{{ host.port }}  {% if be.check|bool %}check{% endif %} {% if be.ssl|bool %}ssl verify  {{ be.verify }}{% endif %}
+
+{% endfor %}
+{% endfor %}
