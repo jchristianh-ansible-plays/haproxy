@@ -16,7 +16,7 @@ __haproxy_maxconn          : 4096
 __haproxy_user             : haproxy
 __haproxy_group            : haproxy
 __haproxy_config_file      : /etc/haproxy/haproxy.cfg
-__haproxy_template_version : 1.0-2213.955
+__haproxy_template_version : 1.0-2230.901
 
 
 __haproxy_defaults:
@@ -39,25 +39,49 @@ __frontends:
       - 80
       - 443
     ssl_certificate : /etc/haproxy/ssl/haproxy.pem
-    backend         : aap_control_plane
+    backend         : "{{ __haproxy_use_backend }}"
 
 
 __backends:
-  - name   : aap_control_plane
+  - name   : aap_blue
     check  : yes
     ssl    : yes
     verify : none
     hosts:
-      - name: lab-tower-1
-        host: 10.10.10.65
+      - name: aap-blue-1
+        host: 10.10.42.1
         port: 443
 
-      - name: lab-tower-3
-        host: 10.10.10.67
+      - name: aap-blue-2
+        host: 10.10.42.2
         port: 443
 
-      - name: lab-tower-5
-        host: 10.1.1.66
+
+  - name   : aap_green
+    check  : yes
+    ssl    : yes
+    verify : none
+    hosts:
+      - name: aap-green-1
+        host: 10.10.42.3
+        port: 443
+
+      - name: aap-green-2
+        host: 10.10.42.4
+        port: 443
+
+
+  - name   : aap_purple
+    check  : yes
+    ssl    : yes
+    verify : none
+    hosts:
+      - name: aap-purple-1
+        host: 10.10.42.5
+        port: 443
+
+      - name: aap-purple-2
+        host: 10.10.42.6
         port: 443
 
 

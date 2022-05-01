@@ -84,4 +84,5 @@ backend {{ be.name }}
   server {{ host.name }}  {{ host.host }}:{{ host.port }}  {% if be.check|bool %}check{% endif %} {% if be.ssl|bool %}ssl verify  {{ be.verify }}{% endif %}
 
 {% endfor %}
+
 {% endfor %}

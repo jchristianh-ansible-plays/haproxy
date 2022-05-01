@@ -7,8 +7,12 @@
   #-------------------------
   # VARS
   #-------------------------
+  vars:
+    __haproxy_use_backend: aap_blue
+
   vars_files:
-    - vars/defaults.yml
+    #- vars/defaults.yml
+    - vars/blue_green.yml
 
 
   #-------------------------
